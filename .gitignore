@@ -1,0 +1,5 @@
+cmake-build
+.vscode
+build.sh
+run.sh
+configure.sh
