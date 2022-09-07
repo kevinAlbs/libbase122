@@ -41,9 +41,39 @@ static void test_bitstring_to_bytes(void) {
   }
 }
 
+#include "../src/util.h"
+
+static void test_get7(void) {
+  /* One byte. */
+  {
+    size_t in_len;
+    byte *in = bitstring_to_bytes("11111111", &in_len);
+    bitreader_t reader = {.in = in, .len = in_len};
+    byte got;
+    int ret = bitreader_get7(&reader, &got);
+    ASSERT(ret, "expected ret to be > 0, got: %d", ret);
+    size_t expect_len;
+    byte *expect = bitstring_to_bytes("01111111", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitreader_get7(&reader, &got);
+    ASSERT(ret, "expected ret to be > 0, got: %d", ret);
+    expect = bitstring_to_bytes("01000000", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitreader_get7(&reader, &got);
+    ASSERT(!ret, "expected ret to be 0, got: %d", ret);
+
+    free(in);
+  }
+}
+
 int main() {
   test_hexstring_to_bytes();
   test_bitstring_to_bytes();
+  test_get7();
 
   typedef struct {
     const char *description;
