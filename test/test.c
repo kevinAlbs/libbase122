@@ -70,10 +70,69 @@ static void test_get7(void) {
   }
 }
 
+static void test_bitreader_read(void) {
+  /* One byte. */
+  {
+    size_t in_len;
+    byte *in = bitstring_to_bytes("11111111", &in_len);
+    bitreader_t reader = {.in = in, .len = in_len};
+    byte got;
+    size_t ret = bitreader_read(&reader, 7, &got);
+    ASSERT(ret == 7, "expected ret to be 7, got: %zu", ret);
+    size_t expect_len;
+    byte *expect = bitstring_to_bytes("01111111", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitreader_read(&reader, 7, &got);
+    ASSERT(ret == 1, "expected ret to be 1, got: %zu", ret);
+    expect = bitstring_to_bytes("00000001", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitreader_read(&reader, 7, &got);
+    ASSERT(ret == 0, "expected ret to be 0, got: %zu", ret);
+    expect = bitstring_to_bytes("00000000", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    free(in);
+  }
+
+  /* Two byte. */
+  {
+    size_t in_len;
+    byte *in = bitstring_to_bytes("10101010 11111111", &in_len);
+    bitreader_t reader = {.in = in, .len = in_len};
+    byte got;
+    size_t ret = bitreader_read(&reader, 7, &got);
+    ASSERT(ret == 7, "expected ret to be 7, got: %zu", ret);
+    size_t expect_len;
+    byte *expect = bitstring_to_bytes("01010101", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitreader_read(&reader, 7, &got);
+    ASSERT(ret == 7, "expected ret to be 7, got: %zu", ret);
+    expect = bitstring_to_bytes("00111111", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitreader_read(&reader, 7, &got);
+    ASSERT(ret == 2, "expected ret to be 2, got: %zu", ret);
+    expect = bitstring_to_bytes("00000011", &expect_len);
+    ASSERT_BYTES_EQUAL(&got, 1, expect, expect_len, bitstring);
+    free(expect);
+
+    free(in);
+  }
+}
+
 int main() {
   test_hexstring_to_bytes();
   test_bitstring_to_bytes();
   test_get7();
+  test_bitreader_read();
 
   typedef struct {
     const char *description;
