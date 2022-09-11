@@ -4,7 +4,6 @@
 #include <stddef.h> /* for size_t */
 
 typedef struct {
-  int code;
   char msg[254];
 } base122_error_t;
 
