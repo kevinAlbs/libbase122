@@ -41,7 +41,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
                    size_t *out_written, base122_error_t *error) {
   bitreader_t reader = {0};
   size_t nbits;
-  unsigned char got;
+  unsigned char bits;
   size_t out_index = 0;
 
   reader.in = in;
@@ -57,15 +57,15 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
   (*out_written)++;                                                                                \
   out_index++;
 
-  while ((nbits = bitreader_read(&reader, 7, &got)) > 0) {
+  while ((nbits = bitreader_read(&reader, 7, &bits)) > 0) {
     if (nbits < 7) {
       /* Align the first bit to start at position 6.
        * E.g. if nbits = 3: 0abc0000 */
-      got <<= 7 - nbits;
+      bits <<= 7 - nbits;
     }
 
-    if (is_illegal(got)) {
-      unsigned char illegal_index = get_illegal_index(got);
+    if (is_illegal(bits)) {
+      unsigned char illegal_index = get_illegal_index(bits);
       unsigned char next_bits;
       unsigned char b1 = 0xC2; /* 11000010 */
       unsigned char b2 = 0x80; /* 10000000 */
@@ -89,7 +89,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
       OUTPUT_BYTE(b2)
 
     } else {
-      OUTPUT_BYTE(got);
+      OUTPUT_BYTE(bits);
     }
   }
 
