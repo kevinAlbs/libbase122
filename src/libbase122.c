@@ -48,6 +48,15 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
   reader.len = in_len;
   *out_written = 0;
 
+#define OUTPUT_BYTE(b)                                                                             \
+  if (out_index == out_len) {                                                                      \
+    strncpy_safe(error->msg, "output does not have sufficient size", sizeof(error->msg));          \
+    return -1;                                                                                     \
+  }                                                                                                \
+  out[out_index] = b;                                                                              \
+  (*out_written)++;                                                                                \
+  out_index++;
+
   while ((nbits = bitreader_read(&reader, 7, &got)) > 0) {
     if (nbits < 7) {
       /* Align the first bit to start at position 6.
@@ -76,32 +85,15 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
       b1 |= first_bit;
       b2 |= next_bits & 0x3F /* 00111111 */;
 
-      if (out_index == out_len) {
-        strncpy_safe(error->msg, "output does not have sufficient size", sizeof(error->msg));
-        return -1;
-      }
-      out[out_index] = b1;
-      (*out_written)++;
-      out_index++;
-
-      if (out_index == out_len) {
-        strncpy_safe(error->msg, "output does not have sufficient size", sizeof(error->msg));
-        return -1;
-      }
-      out[out_index] = b2;
-      (*out_written)++;
-      out_index++;
+      OUTPUT_BYTE(b1)
+      OUTPUT_BYTE(b2)
 
     } else {
-      if (out_index == out_len) {
-        strncpy_safe(error->msg, "output does not have sufficient size", sizeof(error->msg));
-        return -1;
-      }
-      out[out_index] = got;
-      (*out_written)++;
-      out_index++;
+      OUTPUT_BYTE(got);
     }
   }
+
+#undef OUTPUT_BYTE
 
   return 0;
 }
