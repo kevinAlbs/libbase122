@@ -20,11 +20,11 @@ byte *hexstring_to_bytes(const char *hexstring, size_t *bytes_len) {
   for (const char *ptr = hexstring; *ptr != '\0'; ptr++) {
     byte val;
     if (*ptr >= '0' && *ptr <= '9') {
-      val = *ptr - '0';
+      val = (byte)(*ptr - '0');
     } else if (*ptr >= 'A' && *ptr <= 'F') {
-      val = *ptr - 'A' + 10;
+      val = (byte)(*ptr - 'A' + 10);
     } else if (*ptr >= 'a' && *ptr <= 'f') {
-      val = *ptr - 'a' + 10;
+      val = (byte)(*ptr - 'a' + 10);
     } else if (isspace(*ptr)) {
       continue;
     } else {
@@ -43,7 +43,9 @@ byte *hexstring_to_bytes(const char *hexstring, size_t *bytes_len) {
   if (numgot == 1) {
     TEST_ERROR("expected even number of hex characters, got extra");
   }
-  *bytes_len = (size_t)(outptr - out);
+  if (bytes_len) {
+    *bytes_len = (size_t)(outptr - out);
+  }
   return out;
 }
 
@@ -63,7 +65,7 @@ byte *bitstring_to_bytes(const char *bitstring, size_t *bytes_len) {
   for (const char *ptr = bitstring; *ptr != '\0'; ptr++) {
     byte val;
     if (*ptr >= '0' && *ptr <= '1') {
-      val = *ptr - '0';
+      val = (byte)(*ptr - '0');
     } else if (isspace(*ptr)) {
       continue;
     } else {
@@ -79,11 +81,13 @@ byte *bitstring_to_bytes(const char *bitstring, size_t *bytes_len) {
       numgot = 0;
     }
   }
-  *bytes_len = (size_t)(outptr - out);
+  if (bytes_len) {
+    *bytes_len = (size_t)(outptr - out);
+  }
   return out;
 }
 char *bytes_to_bitstring(const byte *bytes, size_t bytes_len) {
-  char *bitstring = malloc((sizeof(byte)) * (8 * bytes_len + 1));
+  char *bitstring = malloc((sizeof(byte)) * (9 * bytes_len + 1));
   char *ptr = bitstring;
   for (size_t i = 0; i < bytes_len; i++) {
     for (byte j = 0; j < 8; j++) {
@@ -95,6 +99,11 @@ char *bytes_to_bitstring(const byte *bytes, size_t bytes_len) {
       }
       ptr += 1;
     }
+    *(ptr++) = ' ';
   }
+  if (ptr > bitstring) {
+    ptr--;
+  }
+  *(ptr++) = '\0';
   return bitstring;
 }
