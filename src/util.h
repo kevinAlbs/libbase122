@@ -7,7 +7,6 @@
 typedef struct {
   const unsigned char *in;
   size_t len;
-  size_t curIndex; /* TODO: if bitreader_get7 is removed, remove curIndex. */
   size_t curBit;
 } bitreader_t;
 
