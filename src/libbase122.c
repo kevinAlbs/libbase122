@@ -74,8 +74,8 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
       /* This will be a two byte character. Try to get the next 7 bits. */
       size_t next_nbits = bitreader_read(&reader, 7, &next_bits);
       if (next_nbits == 0) {
-        strncpy_safe(error->msg, "TODO: not implemented yet", sizeof(error->msg));
-        return -1;
+        b1 |= 0x7 << 2; /* 11100 */
+        next_bits = bits;
       } else {
         b1 |= (illegal_index << 2);
       }

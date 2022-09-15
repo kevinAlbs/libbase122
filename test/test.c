@@ -119,7 +119,10 @@ int main() {
        .encoded = "01010101 00101010 01010101 00101010 01010000"},
       {.description = "illegal one byte",
        .data = "00000000 11111111",
-       .encoded = "11000010 10111111 01100000"}};
+       .encoded = "11000010 10111111 01100000"},
+      {.description = "illegal last two bits",
+       .data = "1111111 1111111 00",
+       .encoded = "01111111 01111111 11011110 10000000"}};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     roundtrip_test_t *test = tests + i;
