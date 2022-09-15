@@ -65,4 +65,16 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
   return nbits;
 }
 
+/* TODO: consider combining both types into a bitstream_t */
+typedef struct {
+  const unsigned char *in;
+  size_t len;
+  size_t curBit;
+} bitwriter_t;
+
+/* bitwriter_write reads nbits bits to writer.
+ * nbits must be [1,8].
+ * Returns -1 if the target buffer does not have capacity */
+static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) { return -1; }
+
 #endif /* LIBBASE_122_UTIL_H */

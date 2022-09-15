@@ -100,5 +100,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
 int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, size_t out_len,
                    size_t *out_written, base122_error_t *error) {
+  bitwriter_t writer;
+  bitwriter_write(&writer, 0, 0);
   return -1;
 }
