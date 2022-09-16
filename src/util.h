@@ -69,7 +69,7 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
 
 /* TODO: consider combining both types into a bitstream_t */
 typedef struct {
-  const unsigned char *in;
+  unsigned char *out;
   size_t len;
   size_t curBit;
 } bitwriter_t;
@@ -78,6 +78,52 @@ typedef struct {
  * nbits must be [1,8].
  * input bits start at the rightmost bit.
  * Returns -1 if the target buffer does not have capacity */
-static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) { return -1; }
+static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) {
+  size_t bitLen = writer->len * 8;
+  size_t firstByteIndex = writer->curBit / 8;
+  size_t firstByteCurBit = writer->curBit % 8;
+  unsigned short twoBytes;
+  unsigned char mask;
+
+  assert(nbits > 0);
+  assert(nbits <= 8);
+
+  if (writer->curBit + nbits > bitLen) {
+    return -1;
+  }
+
+  /* Example of writing 6 bits (abcdef) when firstByteCurBit == 3:
+   *
+   * Create two bytes. Last byte written is first. Use 0 as second byte.
+   *
+   * xyz00000 00000000
+   *    ^
+   *    firstByteCurBit
+   *
+   * Mask input and left shift 8 + (8 - firstByteCurBit) - nbits
+   *
+   * 000abcde f0000000
+   *
+   * Or them together
+   *
+   * xyzabcde f0000000
+   *
+   * Output first byte.
+   * If firstByteCurBit + nbits > 8, then output second byte.
+   */
+
+  twoBytes = writer->out[firstByteIndex];
+  twoBytes <<= 8;
+
+  mask = (unsigned char)(~(255u << nbits));
+  twoBytes |= ((unsigned short)(in & mask)) << (8 + (8 - firstByteCurBit) - nbits);
+
+  writer->out[firstByteIndex] = (unsigned char)(twoBytes >> 8);
+  if (firstByteCurBit + nbits > 8) {
+    writer->out[firstByteIndex + 1] = (unsigned char)twoBytes;
+  }
+  writer->curBit += nbits;
+  return 0;
+}
 
 #endif /* LIBBASE_122_UTIL_H */

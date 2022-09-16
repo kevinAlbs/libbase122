@@ -106,8 +106,8 @@ static void test_bitwriter_write(void) {
   {
     size_t in_len;
     byte got[1];
-    byte *in = bitstring_to_bytes("11110000", &in_len);
-    bitwriter_t writer = {.in = got, .len = sizeof(got)};
+    byte *in = bitstring_to_bytes("00001111", &in_len);
+    bitwriter_t writer = {.out = got, .len = sizeof(got)};
 
     int ret = bitwriter_write(&writer, 1, *in);
     ASSERT(ret != -1, "expected no error");
@@ -124,7 +124,7 @@ static void test_bitwriter_write(void) {
 
     ret = bitwriter_write(&writer, 5, *in);
     ASSERT(ret != -1, "expected no error");
-    expect = bitstring_to_bytes("11111100", &expect_len);
+    expect = bitstring_to_bytes("11011110", &expect_len);
     ASSERT_BYTES_EQUAL(got, sizeof(got), expect, expect_len, bitstring);
     free(expect);
 
@@ -133,6 +133,9 @@ static void test_bitwriter_write(void) {
 
     free(in);
   }
+
+  /* Two byte. */
+  { /* TODO. */ }
 }
 
 int main() {
