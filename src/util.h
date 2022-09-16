@@ -52,7 +52,8 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
 
   firstByteIndex = reader->curBit / 8;
   firstByteCurBit = reader->curBit % 8;
-  twoBytes = reader->in[firstByteIndex] << 8;
+  twoBytes = reader->in[firstByteIndex];
+  twoBytes <<= 8;
   if (firstByteIndex + 1 < reader->len) {
     size_t secondByteIndex = firstByteIndex + 1;
     twoBytes |= reader->in[secondByteIndex];
