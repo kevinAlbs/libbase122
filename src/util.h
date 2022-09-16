@@ -12,6 +12,7 @@ typedef struct {
 
 /* bitreader_read reads nbits bits from reader.
  * nbits must be [1,8].
+ * output bits start at the rightmost bit.
  * Returns the number of bits read. */
 static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *out) {
 
@@ -74,6 +75,7 @@ typedef struct {
 
 /* bitwriter_write reads nbits bits to writer.
  * nbits must be [1,8].
+ * input bits start at the rightmost bit.
  * Returns -1 if the target buffer does not have capacity */
 static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) { return -1; }
 
