@@ -135,7 +135,45 @@ static void test_bitwriter_write(void) {
   }
 
   /* Two byte. */
-  { /* TODO. */ }
+  {
+    size_t in_len;
+    byte got[2];
+    bitwriter_t writer = {.out = got, .len = sizeof(got)};
+
+    int ret = bitwriter_write(&writer, 1, 0xFF);
+    ASSERT(ret != -1, "expected no error");
+    size_t expect_len;
+    byte *expect = bitstring_to_bytes("10000000 00000000", &expect_len);
+    ASSERT_BYTES_EQUAL(got, sizeof(got), expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitwriter_write(&writer, 8, 0x0F);
+    ASSERT(ret != -1, "expected no error");
+    expect = bitstring_to_bytes("10000111 10000000", &expect_len);
+    ASSERT_BYTES_EQUAL(got, sizeof(got), expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitwriter_write(&writer, 1, 0x0);
+    ASSERT(ret != -1, "expected no error");
+    expect = bitstring_to_bytes("10000111 10000000", &expect_len);
+    ASSERT_BYTES_EQUAL(got, sizeof(got), expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitwriter_write(&writer, 1, 0xFF);
+    ASSERT(ret != -1, "expected no error");
+    expect = bitstring_to_bytes("10000111 10100000", &expect_len);
+    ASSERT_BYTES_EQUAL(got, sizeof(got), expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitwriter_write(&writer, 5, 0xFF);
+    ASSERT(ret != -1, "expected no error");
+    expect = bitstring_to_bytes("10000111 10111111", &expect_len);
+    ASSERT_BYTES_EQUAL(got, sizeof(got), expect, expect_len, bitstring);
+    free(expect);
+
+    ret = bitwriter_write(&writer, 1, 0xFF);
+    ASSERT(ret == -1, "expected exceeded capacity error, but got no error");
+  }
 }
 
 int main() {
