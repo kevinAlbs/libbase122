@@ -183,19 +183,19 @@ int main() {
     }
 
     /* Test decoding 'encoded'. */
-    // {
-    //   size_t in_len;
-    //   byte *in = bitstring_to_bytes(test->encoded, &in_len);
-    //   byte got[1] = {0};
-    //   size_t got_len;
-    //   base122_error_t error;
-    //   size_t expect_len;
-    //   byte *expect = bitstring_to_bytes(test->data, &expect_len);
-    //   int ret = base122_decode(in, in_len, got, sizeof(got), &got_len, &error);
-    //   ASSERT(ret != -1, "base122_decode error: %s", error.msg);
-    //   ASSERT_BYTES_EQUAL(expect, expect_len, got, got_len, bitstring);
-    //   free(expect);
-    //   free(in);
-    // }
+    {
+      size_t in_len;
+      byte *in = bitstring_to_bytes(test->encoded, &in_len);
+      byte got[1] = {0};
+      size_t got_len;
+      base122_error_t error;
+      size_t expect_len;
+      byte *expect = bitstring_to_bytes(test->data, &expect_len);
+      int ret = base122_decode(in, in_len, got, sizeof(got), &got_len, &error);
+      ASSERT(ret != -1, "base122_decode error: %s", error.msg);
+      ASSERT_BYTES_EQUAL(expect, expect_len, got, got_len, bitstring);
+      free(expect);
+      free(in);
+    }
   }
 }

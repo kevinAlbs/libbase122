@@ -100,7 +100,42 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
 int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, size_t out_len,
                    size_t *out_written, base122_error_t *error) {
-  bitwriter_t writer;
-  bitwriter_write(&writer, 0, 0);
+  bitwriter_t writer = {0};
+  size_t curByte;
+
+  assert(in);
+  assert(in_len > 0);
+  assert(out);
+  assert(out_len > 0);
+  assert(out_written);
+
+  writer.out = out;
+  writer.len = out_len;
+  writer.curBit = 0;
+
+  for (curByte = 0; curByte < in_len; curByte++) {
+    if (in[curByte] >> 7 == 0) {
+      /* One byte sequence. */
+      size_t nbits = 7;
+      unsigned char curByteVal = in[curByte];
+
+      if (curByte == in_len - 1) {
+        /* Last input byte. */
+        /* Do not write extra bytes. Write up to the nearest bit boundary. */
+        nbits = 8 - (writer.curBit % 8);
+        if ((nbits == 8) % 8 != 0) {
+          strncpy_safe(error->msg, "Decoded data is not a byte multiple", sizeof(error->msg));
+          return -1;
+        }
+        /* Shift bits to write. */
+        curByteVal >>= 7 - nbits;
+      }
+      if (bitwriter_write(&writer, nbits, curByteVal) == -1) {
   return -1;
+      }
+    }
+  }
+
+  *out_written = writer.curBit / 8;
+  return 0;
 }
