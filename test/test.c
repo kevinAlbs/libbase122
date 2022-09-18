@@ -105,7 +105,7 @@ static void test_bitwriter_write(void) {
   /* One byte. */
   {
     size_t in_len;
-    byte got[1];
+    byte got[1] = {0};
     byte *in = bitstring_to_bytes("00001111", &in_len);
     bitwriter_t writer = {.out = got, .len = sizeof(got)};
 
@@ -136,8 +136,7 @@ static void test_bitwriter_write(void) {
 
   /* Two byte. */
   {
-    size_t in_len;
-    byte got[2];
+    byte got[2] = {0};
     bitwriter_t writer = {.out = got, .len = sizeof(got)};
 
     int ret = bitwriter_write(&writer, 1, 0xFF);
