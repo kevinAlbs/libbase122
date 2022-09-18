@@ -175,11 +175,49 @@ static void test_bitwriter_write(void) {
   }
 }
 
+static void test_decode_errors(void) {
+  typedef struct {
+    const char *encoded;
+    const char *expectError;
+    size_t decodedLen;
+  } decode_error_test_t;
+
+  decode_error_test_t tests[] = {{.encoded = "01111111 01111111 01111111",
+                                  .expectError = "Last byte has extra data",
+                                  .decodedLen = 3},
+                                 {.encoded = "01111111 01000000 01111111 01000000",
+                                  .expectError = "Output does not have sufficient size",
+                                  .decodedLen = 1}
+
+  };
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
+    decode_error_test_t *test = tests + i;
+
+    printf("decode error test %zu: '%s'\n", i, test->expectError);
+
+    size_t encoded_len;
+    byte *encoded = bitstring_to_bytes(test->encoded, &encoded_len);
+    size_t got_len = test->decodedLen ? test->decodedLen : 1;
+    byte *got = malloc(sizeof(byte) * got_len);
+    size_t written;
+    base122_error_t error;
+
+    int ret = base122_decode(encoded, encoded_len, got, got_len, &written, &error);
+    ASSERT(ret == -1, "expected base122_decode to error, but succeeded");
+    ASSERT_STRCONTAINS(error.msg, test->expectError);
+
+    free(got);
+    free(encoded);
+  }
+}
+
 int main() {
   test_hexstring_to_bytes();
   test_bitstring_to_bytes();
   test_bitreader_read();
   test_bitwriter_write();
+  test_decode_errors();
 
   typedef struct {
     const char *description;
