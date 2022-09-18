@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h> // abort
+#include <string.h> // strstr
 
 typedef unsigned char byte;
 
@@ -35,6 +36,19 @@ typedef unsigned char byte;
     if (((_s1 == NULL || _s2 == NULL) && _s1 != _s2) || 0 != strcmp(_s1, _s2)) {                   \
       fprintf(stderr, "assertion failed on %s:%d : '%s' != '%s' : ", __FILE__, __LINE__, _s1,      \
               _s2);                                                                                \
+      fprintf(stderr, "\n");                                                                       \
+      fflush(stderr);                                                                              \
+      abort();                                                                                     \
+    }                                                                                              \
+  } while (0)
+
+#define ASSERT_STRCONTAINS(s1, s2)                                                                 \
+  do {                                                                                             \
+    const char *_s1 = (s1);                                                                        \
+    const char *_s2 = (s2);                                                                        \
+    if (((_s1 == NULL || _s2 == NULL) && _s1 != _s2) || NULL == strstr(_s1, _s2)) {                \
+      fprintf(stderr, "assertion failed on %s:%d : '%s' does not contain '%s' : ", __FILE__,       \
+              __LINE__, _s1, _s2);                                                                 \
       fprintf(stderr, "\n");                                                                       \
       fflush(stderr);                                                                              \
       abort();                                                                                     \
