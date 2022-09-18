@@ -201,38 +201,36 @@ int main() {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     roundtrip_test_t *test = tests + i;
+    size_t data_len;
+    byte *data = bitstring_to_bytes(test->data, &data_len);
+    size_t encoded_len;
+    byte *encoded = bitstring_to_bytes(test->encoded, &encoded_len);
 
-    printf("test '%s'\n", test->description);
+    printf("round trip test '%s'\n", test->description);
     /* Test encoding 'data'. */
     {
-      size_t in_len;
-      byte *in = bitstring_to_bytes(test->data, &in_len);
-      byte *got = malloc(sizeof(byte) * in_len);
-      size_t got_len;
+      size_t got_len = encoded_len;
+      byte *got = malloc(sizeof(byte) * got_len);
+      size_t written;
       base122_error_t error;
-      size_t expect_len;
-      byte *expect = bitstring_to_bytes(test->encoded, &expect_len);
-      int ret = base122_encode(in, in_len, got, sizeof(got), &got_len, &error);
+      int ret = base122_encode(data, data_len, got, got_len, &written, &error);
       ASSERT(ret != -1, "base122_encode error: %s", error.msg);
-      ASSERT_BYTES_EQUAL(expect, expect_len, got, got_len, bitstring);
-      free(expect);
-      free(in);
+      ASSERT_BYTES_EQUAL(encoded, encoded_len, got, got_len, bitstring);
+      free(got);
     }
 
     /* Test decoding 'encoded'. */
     {
-      size_t in_len;
-      byte *in = bitstring_to_bytes(test->encoded, &in_len);
-      byte got[1] = {0};
-      size_t got_len;
       base122_error_t error;
-      size_t expect_len;
-      byte *expect = bitstring_to_bytes(test->data, &expect_len);
-      int ret = base122_decode(in, in_len, got, sizeof(got), &got_len, &error);
+      size_t got_len = data_len;
+      byte *got = malloc(sizeof(byte) * got_len);
+      int ret = base122_decode(encoded, encoded_len, got, sizeof(got), &got_len, &error);
       ASSERT(ret != -1, "base122_decode error: %s", error.msg);
-      ASSERT_BYTES_EQUAL(expect, expect_len, got, got_len, bitstring);
-      free(expect);
-      free(in);
+      ASSERT_BYTES_EQUAL(data, data_len, got, got_len, bitstring);
+      free(got);
     }
+
+    free(data);
+    free(encoded);
   }
 }
