@@ -112,7 +112,8 @@ static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) 
    * If firstByteCurBit + nbits > 8, then output second byte.
    */
 
-  twoBytes = writer->out[firstByteIndex];
+  mask = (unsigned char)(~(255u >> firstByteCurBit));
+  twoBytes = writer->out[firstByteIndex] & mask;
   twoBytes <<= 8;
 
   mask = (unsigned char)(~(255u << nbits));
