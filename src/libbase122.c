@@ -98,6 +98,36 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
   return 0;
 }
 
+/* write_last_7 writes the last 7 bits of byteVal for decoding.
+ * Sets an error if byteVal has 1 bits exceeding the last byte boundary. */
+static int write_last_7(bitwriter_t *writer, unsigned char byteVal, base122_error_t *error) {
+  size_t nbits = 7;
+  unsigned char mask;
+  /* Last input byte. */
+  /* Do not write extra bytes. Write up to the nearest bit boundary. */
+  nbits = 8 - (writer->curBit % 8);
+  if (nbits == 8) {
+    strncpy_safe(error->msg, "Decoded data is not a byte multiple", sizeof(error->msg));
+    return -1;
+  }
+  /* Error if any bits after the last input bits are 1.
+   * Example: nbits = 2
+   * byteVal of 01100001 is an error. The rightmost 1 bit is unexpected. */
+  mask = (unsigned char)~(0xFFu << (7 - nbits));
+  if ((byteVal & mask) > 0) {
+    strncpy_safe(error->msg, "Encoded data is malformed. Last byte has extra data.",
+                 sizeof(error->msg));
+    return -1;
+  }
+  /* Shift bits to write. */
+  byteVal >>= 7 - nbits;
+  if (bitwriter_write(writer, nbits, byteVal) == -1) {
+    strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
+    return -1;
+  }
+  return 0;
+}
+
 int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, size_t out_len,
                    size_t *out_written, base122_error_t *error) {
   bitwriter_t writer = {0};
@@ -120,6 +150,7 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
       unsigned char curByteVal = in[curByte];
 
       if (curByte == in_len - 1) {
+        /* TODO: use write_last_7. */
         unsigned char mask;
         /* Last input byte. */
         /* Do not write extra bytes. Write up to the nearest bit boundary. */
@@ -168,14 +199,25 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
       illegalIndex = (curByteVal & 0x1Cu /* 00011100 */) >> 2;
       if (illegalIndex == 0x7 /* 111 */) {
+        unsigned char lastByteVal;
+
         /* This is a shortened two byte sequence. */
         if (curByte + 1 != in_len) {
           strncpy_safe(error->msg, "Got unexpected extra data after shortened two byte sequence",
                        sizeof(error->msg));
           return -1;
         }
+
+        lastByteVal = (curByteVal << 0x7u) | (nextByteVal & 0x3F /* 00111111 */);
+
+        if (-1 == write_last_7(&writer, lastByteVal, error)) {
+          return -1;
+        }
       } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
-        /* Not the last two byte sequence. */
+
+        /* TODO: check if the second 7 bits exceeds the output byte buffer. */
+        strncpy_safe(error->msg, "Non 111 illegal index not implemented", sizeof(error->msg));
+        return -1;
       } else {
         strncpy_safe(error->msg, "Got unrecognized illegal index", sizeof(error->msg));
         return -1;

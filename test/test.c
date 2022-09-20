@@ -180,6 +180,7 @@ static void test_decode_errors(void) {
     const char *encoded;
     const char *expectError;
     size_t decodedLen;
+    const char *expect;
   } decode_error_test_t;
 
   decode_error_test_t tests[] = {
@@ -203,12 +204,27 @@ static void test_decode_errors(void) {
        .decodedLen = 3},
       {.encoded = "11011010 10111111",
        .expectError = "Got unrecognized illegal index",
-       .decodedLen = 2}};
+       .decodedLen = 2},
+      {.encoded = "01111111",
+       .expectError = "Decoded data is not a byte multiple",
+       .decodedLen = 1},
+      {.encoded = "01111111 01111111",
+       .expectError = "Encoded data is malformed. Last byte has extra data.",
+       .decodedLen = 1},
+      {.encoded = "01111111 11011110 10000000", .expect = "11111110", .decodedLen = 1},
+      {.encoded = "01111111 11011111 10100000",
+       .expectError = "Encoded data is malformed. Last byte has extra data.",
+       .decodedLen = 1},
+      {.encoded = "11011110 10000000",
+       .expectError = "Decoded data is not a byte multiple",
+       .decodedLen = 1},
+      {.encoded = "00000000 11011110 10000000", .expect = "00000000", .decodedLen = 1}};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     decode_error_test_t *test = tests + i;
 
-    printf("decode error test %zu: '%s'\n", i, test->expectError);
+    printf("decode error test %zu: '%s'\n", i,
+           test->expectError ? test->expectError : test->encoded);
 
     size_t encoded_len;
     byte *encoded = bitstring_to_bytes(test->encoded, &encoded_len);
@@ -218,8 +234,16 @@ static void test_decode_errors(void) {
     base122_error_t error;
 
     int ret = base122_decode(encoded, encoded_len, got, got_len, &written, &error);
-    ASSERT(ret == -1, "expected base122_decode to error, but succeeded");
-    ASSERT_STRCONTAINS(error.msg, test->expectError);
+    if (test->expectError) {
+      ASSERT(ret == -1, "expected base122_decode to error, but succeeded");
+      ASSERT_STRCONTAINS(error.msg, test->expectError);
+    } else {
+      ASSERT(ret == 0, "expected base122_decode to succeed, but got: %s", error.msg);
+      size_t expect_len;
+      byte *expect = bitstring_to_bytes(test->expect, &expect_len);
+      ASSERT_BYTES_EQUAL(expect, expect_len, got, got_len, bitstring);
+      free(expect);
+    }
 
     free(got);
     free(encoded);
