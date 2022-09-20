@@ -175,15 +175,15 @@ static void test_bitwriter_write(void) {
   }
 }
 
-static void test_decode_errors(void) {
+static void test_decode(void) {
   typedef struct {
     const char *encoded;
     const char *expectError;
     size_t decodedLen;
     const char *expect;
-  } decode_error_test_t;
+  } decode_test_t;
 
-  decode_error_test_t tests[] = {
+  decode_test_t tests[] = {
       {.encoded = "01111111 01111111 01111111",
        .expectError = "Last byte has extra data",
        .decodedLen = 3},
@@ -221,10 +221,9 @@ static void test_decode_errors(void) {
       {.encoded = "00000000 11011110 10000000", .expect = "00000000", .decodedLen = 1}};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
-    decode_error_test_t *test = tests + i;
+    decode_test_t *test = tests + i;
 
-    printf("decode error test %zu: '%s'\n", i,
-           test->expectError ? test->expectError : test->encoded);
+    printf("decode test %zu: '%s'\n", i, test->expectError ? test->expectError : test->encoded);
 
     size_t encoded_len;
     byte *encoded = bitstring_to_bytes(test->encoded, &encoded_len);
@@ -255,7 +254,7 @@ int main() {
   test_bitstring_to_bytes();
   test_bitreader_read();
   test_bitwriter_write();
-  test_decode_errors();
+  test_decode();
 
   typedef struct {
     const char *description;
