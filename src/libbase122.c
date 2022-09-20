@@ -142,7 +142,43 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
       }
       if (bitwriter_write(&writer, nbits, curByteVal) == -1) {
         strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
-  return -1;
+        return -1;
+      }
+    } else {
+      /* Two byte sequence. */
+      unsigned char curByteVal = in[curByte];
+      unsigned char nextByteVal;
+      unsigned char illegalIndex;
+      /* Expect first byte to have form 110xxx1y. */
+      if ((curByteVal & 0xE2) /* 11100010 */ != 0xC2 /* 11000010 */) {
+        strncpy_safe(error->msg, "First byte of two byte sequence malformed", sizeof(error->msg));
+        return -1;
+      }
+      if (curByte + 1 == in_len) {
+        strncpy_safe(error->msg, "Two byte sequence is missing second byte", sizeof(error->msg));
+        return -1;
+      }
+      curByte++;
+      nextByteVal = in[curByte];
+      /* Expect second byte to have form 10xxxxxx. */
+      if ((nextByteVal & 0xC0) /* 11000000 */ != 0x80 /* 10000000 */) {
+        strncpy_safe(error->msg, "Second byte of two byte sequence malformed", sizeof(error->msg));
+        return -1;
+      }
+
+      illegalIndex = (curByteVal & 0x1Cu /* 00011100 */) >> 2;
+      if (illegalIndex == 0x7 /* 111 */) {
+        /* This is a shortened two byte sequence. */
+        if (curByte + 1 != in_len) {
+          strncpy_safe(error->msg, "Got unexpected extra data after shortened two byte sequence",
+                       sizeof(error->msg));
+          return -1;
+        }
+      } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
+        /* Not the last two byte sequence. */
+      } else {
+        strncpy_safe(error->msg, "Got unrecognized illegal index", sizeof(error->msg));
+        return -1;
       }
     }
   }

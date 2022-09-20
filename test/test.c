@@ -182,14 +182,28 @@ static void test_decode_errors(void) {
     size_t decodedLen;
   } decode_error_test_t;
 
-  decode_error_test_t tests[] = {{.encoded = "01111111 01111111 01111111",
-                                  .expectError = "Last byte has extra data",
-                                  .decodedLen = 3},
-                                 {.encoded = "01111111 01000000 01111111 01000000",
-                                  .expectError = "Output does not have sufficient size",
-                                  .decodedLen = 1}
-
-  };
+  decode_error_test_t tests[] = {
+      {.encoded = "01111111 01111111 01111111",
+       .expectError = "Last byte has extra data",
+       .decodedLen = 3},
+      {.encoded = "01111111 01000000 01111111 01000000",
+       .expectError = "Output does not have sufficient size",
+       .decodedLen = 1},
+      {.encoded = "11011110 11111111",
+       .expectError = "Second byte of two byte sequence malformed",
+       .decodedLen = 2},
+      {.encoded = "11111111",
+       .expectError = "First byte of two byte sequence malformed",
+       .decodedLen = 1},
+      {.encoded = "11011110",
+       .expectError = "Two byte sequence is missing second byte",
+       .decodedLen = 1},
+      {.encoded = "11011110 10111111 01111111",
+       .expectError = "Got unexpected extra data after shortened two byte sequence",
+       .decodedLen = 3},
+      {.encoded = "11011010 10111111",
+       .expectError = "Got unrecognized illegal index",
+       .decodedLen = 2}};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     decode_error_test_t *test = tests + i;
