@@ -11,7 +11,7 @@ static void strncpy_safe(char *dest, const char *src, size_t n) {
   dest[n - 1] = '\0';
 }
 
-static char illegals[] = {
+static unsigned char illegals[] = {
     0 /* null */,          10 /* newline */,   13 /* carriage return */,
     34 /* double quote */, 38 /* ampersand */, 92 /* backslash */
 };
@@ -214,10 +214,27 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
           return -1;
         }
       } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
+        unsigned char secondByteVal;
 
-        /* TODO: check if the second 7 bits exceeds the output byte buffer. */
-        strncpy_safe(error->msg, "Non 111 illegal index not implemented", sizeof(error->msg));
-        return -1;
+        if (-1 == bitwriter_write(&writer, 7, illegals[illegalIndex])) {
+          strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
+          return -1;
+        }
+
+        secondByteVal = (curByteVal << 0x7u) | (nextByteVal & 0x3F /* 00111111 */);
+
+        if (curByte + 1 == in_len) {
+          /* This is the last byte. */
+          if (-1 == write_last_7(&writer, secondByteVal, error)) {
+            return -1;
+          }
+        } else {
+          if (-1 == bitwriter_write(&writer, 7, secondByteVal)) {
+            strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
+            return -1;
+          }
+        }
+
       } else {
         strncpy_safe(error->msg, "Got unrecognized illegal index", sizeof(error->msg));
         return -1;
