@@ -150,28 +150,10 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
       unsigned char curByteVal = in[curByte];
 
       if (curByte == in_len - 1) {
-        /* TODO: use write_last_7. */
-        unsigned char mask;
-        /* Last input byte. */
-        /* Do not write extra bytes. Write up to the nearest bit boundary. */
-        nbits = 8 - (writer.curBit % 8);
-        if (nbits == 8) {
-          strncpy_safe(error->msg, "Decoded data is not a byte multiple", sizeof(error->msg));
+        if (-1 == write_last_7(&writer, curByteVal, error)) {
           return -1;
         }
-        /* Error if any bits after the last input bits are 1.
-         * Example: nbits = 2
-         * curByteVal of 01100001 is an error. The rightmost 1 bit is unexpected. */
-        mask = (unsigned char)~(0xFFu << (7 - nbits));
-        if ((curByteVal & mask) > 0) {
-          strncpy_safe(error->msg, "Encoded data is malformed. Last byte has extra data.",
-                       sizeof(error->msg));
-          return -1;
-        }
-        /* Shift bits to write. */
-        curByteVal >>= 7 - nbits;
-      }
-      if (bitwriter_write(&writer, nbits, curByteVal) == -1) {
+      } else if (bitwriter_write(&writer, nbits, curByteVal) == -1) {
         strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
         return -1;
       }
