@@ -134,7 +134,6 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
   size_t curByte;
 
   assert(in);
-  assert(in_len > 0);
   assert(out);
   assert(out_len > 0);
   assert(out_written);
