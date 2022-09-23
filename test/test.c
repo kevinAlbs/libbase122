@@ -250,12 +250,46 @@ static void test_decode(void) {
   }
 }
 
+static void test_encode_all_1s(void) {
+  /* Generate round trip tests of byte lengths up to 65. */
+  for (size_t i = 0; i <= 65; i++) {
+    base122_error_t error;
+
+    printf("Encode all 1's: %zu\n", i);
+    byte *in = malloc(sizeof(byte) * i);
+    for (size_t j = 0; j < i; j++) {
+      *in = 0xFF;
+    }
+
+    /* Encode */
+    byte encoded[128];
+    size_t encoded_written;
+    {
+      int got = base122_encode(in, i, encoded, sizeof(encoded), &encoded_written, &error);
+      ASSERT(got != -1, "error in base122_encode: %d", got);
+    }
+
+    /* Decode */
+    {
+      byte decoded[128];
+      size_t decoded_written;
+      int got = base122_decode(encoded, encoded_written, decoded, sizeof(decoded), &decoded_written,
+                               &error);
+      ASSERT(got != -1, "error in base122_decode: %d", got);
+      ASSERT(decoded_written == i, "expected decoded_written == i, got %zu and %zu",
+             decoded_written, i);
+      ASSERT_BYTES_EQUAL(in, i, decoded, decoded_written, bitstring);
+    }
+  }
+}
+
 int main() {
   test_hexstring_to_bytes();
   test_bitstring_to_bytes();
   test_bitreader_read();
   test_bitwriter_write();
   test_decode();
+  test_encode_all_1s();
 
   typedef struct {
     const char *description;
