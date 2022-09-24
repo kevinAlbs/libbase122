@@ -77,9 +77,10 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
 
 /* TODO: consider combining both types into a bitstream_t */
 typedef struct {
-  unsigned char *out;
-  size_t len;
+  unsigned char *out; /* May be NULL if countOnly is true */
+  size_t len /* May be 0 if countOnly is true */;
   size_t curBit;
+  int countOnly; /* If 1, only count written bits. Do not write. */
 } bitwriter_t;
 
 /* bitwriter_write writes nbits bits to writer.
@@ -95,6 +96,11 @@ static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) 
 
   assert(nbits > 0);
   assert(nbits <= 8);
+
+  if (writer->countOnly == 1) {
+    writer->curBit += nbits;
+    return 0;
+  }
 
   if (writer->curBit + nbits > bitLen) {
     return -1;

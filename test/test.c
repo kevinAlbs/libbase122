@@ -328,6 +328,16 @@ int main() {
       int ret = base122_encode(data, data_len, got, got_len, &written, &error);
       ASSERT(ret != -1, "base122_encode error: %s", error.msg);
       ASSERT_BYTES_EQUAL(encoded, encoded_len, got, got_len, bitstring);
+      ASSERT(written == encoded_len, "expected written == encoded_len. Got %zu != %zu", written,
+             encoded_len);
+      /* Test length calculation. */
+      {
+        written = 0;
+        ret = base122_encode(data, data_len, NULL, 0, &written, &error);
+        ASSERT(ret != -1, "base122_encode error: %s", error.msg);
+        ASSERT(written == encoded_len, "expected written == encoded_len. Got %zu != %zu", written,
+               encoded_len);
+      }
       free(got);
     }
 
@@ -336,9 +346,20 @@ int main() {
       base122_error_t error;
       size_t got_len = data_len;
       byte *got = malloc(sizeof(byte) * got_len);
-      int ret = base122_decode(encoded, encoded_len, got, sizeof(got), &got_len, &error);
+      size_t written;
+      int ret = base122_decode(encoded, encoded_len, got, got_len, &written, &error);
       ASSERT(ret != -1, "base122_decode error: %s", error.msg);
       ASSERT_BYTES_EQUAL(data, data_len, got, got_len, bitstring);
+      ASSERT(written == data_len, "expected written == data_len. Got %zu != %zu", written,
+             data_len);
+      /* Test length calculation. */
+      {
+        written = 0;
+        ret = base122_decode(encoded, encoded_len, NULL, 0, &written, &error);
+        ASSERT(ret != -1, "base122_decode error: %s", error.msg);
+        ASSERT(written == data_len, "expected written == data_len. Got %zu != %zu", written,
+               data_len);
+      }
       free(got);
     }
 

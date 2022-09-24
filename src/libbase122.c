@@ -43,19 +43,31 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
   size_t nbits;
   unsigned char bits;
   size_t out_index = 0;
+  int countOnly;
+
+  assert(in);
+  assert(out_written);
+
+  if (out == NULL) {
+    countOnly = 1;
+  }
 
   reader.in = in;
   reader.len = in_len;
   *out_written = 0;
 
 #define OUTPUT_BYTE(b)                                                                             \
-  if (out_index == out_len) {                                                                      \
-    strncpy_safe(error->msg, "output does not have sufficient size", sizeof(error->msg));          \
-    return -1;                                                                                     \
-  }                                                                                                \
-  out[out_index] = b;                                                                              \
-  (*out_written)++;                                                                                \
-  out_index++;
+  if (countOnly == 1) {                                                                            \
+    (*out_written)++;                                                                              \
+  } else {                                                                                         \
+    if (out_index == out_len) {                                                                    \
+      strncpy_safe(error->msg, "output does not have sufficient size", sizeof(error->msg));        \
+      return -1;                                                                                   \
+    }                                                                                              \
+    out[out_index] = b;                                                                            \
+    (*out_written)++;                                                                              \
+    out_index++;                                                                                   \
+  }
 
   while ((nbits = bitreader_read(&reader, 7, &bits)) > 0) {
     if (nbits < 7) {
@@ -134,13 +146,15 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
   size_t curByte;
 
   assert(in);
-  assert(out);
-  assert(out_len > 0);
   assert(out_written);
 
   writer.out = out;
   writer.len = out_len;
   writer.curBit = 0;
+
+  if (out == NULL) {
+    writer.countOnly = 1;
+  }
 
   for (curByte = 0; curByte < in_len; curByte++) {
 
