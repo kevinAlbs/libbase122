@@ -258,7 +258,7 @@ static void test_encode_all_1s(void) {
     printf("Encode all 1's: %zu\n", i);
     byte *in = malloc(sizeof(byte) * i);
     for (size_t j = 0; j < i; j++) {
-      *in = 0xFF;
+      in[j] = 0xFF;
     }
 
     /* Encode */
@@ -280,6 +280,8 @@ static void test_encode_all_1s(void) {
              decoded_written, i);
       ASSERT_BYTES_EQUAL(in, i, decoded, decoded_written, bitstring);
     }
+
+    free(in);
   }
 }
 
