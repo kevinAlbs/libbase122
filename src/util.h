@@ -74,7 +74,7 @@ typedef struct {
   size_t curBit;
 } bitwriter_t;
 
-/* bitwriter_write reads nbits bits to writer.
+/* bitwriter_write writes nbits bits to writer.
  * nbits must be [1,8].
  * input bits start at the rightmost bit.
  * Returns -1 if the target buffer does not have capacity */
