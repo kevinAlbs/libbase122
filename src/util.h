@@ -12,8 +12,11 @@ typedef struct {
 
 /* bitreader_read reads nbits bits from reader.
  * nbits must be [1,8].
- * output bits start at the rightmost bit.
- * Returns the number of bits read. */
+ * out is set to the output bits starting from the right. The left most bits (if any) are set to 0.
+ * Example: read 3 bits of input 11111111. *out is initially 01010101. Results in *out set to
+ * 00000111.
+ * Returns the number of bits read.
+ */
 static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *out) {
 
   /* Do not read more bits than stored. */
@@ -29,6 +32,11 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
 
   if (nbits > maxNbits) {
     nbits = maxNbits;
+  }
+
+  if (nbits == 0) {
+    *out = 0;
+    return 0;
   }
 
   /* Example of reading 6 bits:
