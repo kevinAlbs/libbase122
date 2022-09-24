@@ -143,19 +143,25 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
   writer.curBit = 0;
 
   for (curByte = 0; curByte < in_len; curByte++) {
+
+#define WRITE_7(val)                                                                               \
+  if (1) {                                                                                         \
+    if (curByte + 1 == in_len) {                                                                   \
+      if (-1 == write_last_7(&writer, val, error)) {                                               \
+        return -1;                                                                                 \
+      }                                                                                            \
+    } else if (bitwriter_write(&writer, 7, val) == -1) {                                           \
+      strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));        \
+      return -1;                                                                                   \
+    }                                                                                              \
+  } else                                                                                           \
+    ((void)0)
+
     if (in[curByte] >> 7 == 0) {
       /* One byte sequence. */
-      size_t nbits = 7;
       unsigned char curByteVal = in[curByte];
 
-      if (curByte == in_len - 1) {
-        if (-1 == write_last_7(&writer, curByteVal, error)) {
-          return -1;
-        }
-      } else if (bitwriter_write(&writer, nbits, curByteVal) == -1) {
-        strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
-        return -1;
-      }
+      WRITE_7(curByteVal);
     } else {
       /* Two byte sequence. */
       unsigned char curByteVal = in[curByte];
@@ -191,9 +197,7 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
         lastByteVal = (curByteVal << 0x7u) | (nextByteVal & 0x3F /* 00111111 */);
 
-        if (-1 == write_last_7(&writer, lastByteVal, error)) {
-          return -1;
-        }
+        WRITE_7(lastByteVal);
       } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
         unsigned char secondByteVal;
 
@@ -204,18 +208,7 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
         secondByteVal = (curByteVal << 0x7u) | (nextByteVal & 0x3F /* 00111111 */);
 
-        if (curByte + 1 == in_len) {
-          /* This is the last byte. */
-          if (-1 == write_last_7(&writer, secondByteVal, error)) {
-            return -1;
-          }
-        } else {
-          if (-1 == bitwriter_write(&writer, 7, secondByteVal)) {
-            strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
-            return -1;
-          }
-        }
-
+        WRITE_7(secondByteVal);
       } else {
         strncpy_safe(error->msg, "Got unrecognized illegal index", sizeof(error->msg));
         return -1;
