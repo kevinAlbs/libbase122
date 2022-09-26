@@ -52,7 +52,7 @@ byte *hexstring_to_bytes(const char *hexstring, size_t *bytes_len) {
 char *bytes_to_hexstring(const byte *bytes, size_t bytes_len) {
   char *hexstring = malloc(sizeof(char *) * (2 * bytes_len + 1));
   for (size_t i = 0; i < bytes_len; i++) {
-    snprintf(hexstring + (2 * i), 3, "%X", bytes[i]);
+    snprintf(hexstring + (2 * i), 3, "%02X", bytes[i]);
   }
   return hexstring;
 }
