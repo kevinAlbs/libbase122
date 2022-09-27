@@ -43,7 +43,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
   size_t nbits;
   unsigned char bits;
   size_t out_index = 0;
-  int countOnly;
+  int countOnly = 0;
 
   assert(in);
   assert(out_written);
