@@ -209,7 +209,7 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
           return -1;
         }
 
-        lastByteVal = (curByteVal << 0x7u) | (nextByteVal & 0x3F /* 00111111 */);
+        lastByteVal = (curByteVal << 0x6u) | (nextByteVal & 0x3F /* 00111111 */);
 
         WRITE_7(lastByteVal);
       } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
@@ -220,7 +220,7 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
           return -1;
         }
 
-        secondByteVal = (curByteVal << 0x7u) | (nextByteVal & 0x3F /* 00111111 */);
+        secondByteVal = (curByteVal << 0x6u) | (nextByteVal & 0x3F /* 00111111 */);
 
         WRITE_7(secondByteVal);
       } else {
