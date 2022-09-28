@@ -219,7 +219,8 @@ static void test_decode(void) {
        .expectError = "Decoded data is not a byte multiple",
        .decodedLen = 1},
       {.encoded = "00000000 11011110 10000000", .expect = "00000000", .decodedLen = 1},
-      {.encoded = "00000000 11000010 10000000", .expect = "00000000 00000000", .decodedLen = 2}};
+      {.encoded = "00000000 11000010 10000000", .expect = "00000000 00000000", .decodedLen = 2},
+      {.encoded = "11001111 10000001 01100000", .expect = "01000101 00000111", .decodedLen = 2}};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     decode_test_t *test = tests + i;
