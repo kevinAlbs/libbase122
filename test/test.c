@@ -1,7 +1,13 @@
 #include "../src/libbase122.h"
 
 #include "assertions.h"
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <string.h> // strerror
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static void test_hexstring_to_bytes(void) {
   /* One byte. */
@@ -286,6 +292,129 @@ static void test_encode_all_1s(void) {
   }
 }
 
+static byte *read_file(const char *path, size_t *len) {
+  size_t capacity = 1024;
+  byte *data = malloc(capacity);
+  size_t offset = 0;
+  int fd = open(path, O_RDONLY);
+  ASSERT(fd != -1, "error in open: %s", strerror(errno));
+  ssize_t got;
+
+  while ((got = read(fd, data + offset, capacity - offset)) > 0) {
+    offset += (size_t)got;
+    if (capacity == offset) {
+      capacity *= 2;
+      data = realloc(data, capacity);
+    }
+  }
+
+  ASSERT(got != -1, "error in read: %s", strerror(errno));
+  close(fd);
+  *len = offset;
+  return data;
+}
+
+typedef struct {
+  unsigned char src;
+  size_t nbits;
+} src_to_nbits;
+
+extern src_to_nbits *debugmap;
+extern size_t debugmap_i;
+extern int debug;
+
+/* data is expected data. */
+static void debugmap_dump(byte *data, size_t data_len, byte *decoded) {
+#define MIN(A, B) (A < B) ? A : B
+  /* Dump the debug mapping src bytes to number of bits written. */
+  size_t debug_index = 0;
+
+  for (size_t i = 0; i < data_len; i++) {
+    char *expect_bitstring = bytes_to_bitstring(&data[i], 1);
+    char *got_bitstring = bytes_to_bitstring(&decoded[i], 1);
+    printf("Index %05zu | Expect %s %s Got %s | Came from", i, expect_bitstring,
+           data[i] == decoded[i] ? "==" : "!=", got_bitstring);
+    size_t nbits = 8;
+    while (nbits > 0) {
+      src_to_nbits *stn = debugmap + debug_index;
+      char *debug_bitstring = bytes_to_bitstring(&stn->src, 1);
+      size_t bits_from_src = MIN(nbits, stn->nbits);
+      printf(" [%zu:%zu]%s", debug_index, bits_from_src, debug_bitstring);
+      free(debug_bitstring);
+
+      if (nbits >= stn->nbits) {
+        nbits -= stn->nbits;
+        stn->nbits = 0;
+        debug_index++;
+      } else {
+        stn->nbits -= nbits;
+        nbits = 0;
+      }
+    }
+    printf("\n");
+    free(got_bitstring);
+    free(expect_bitstring);
+  }
+}
+
+static void test_encode_file(void) {
+  size_t data_len;
+  byte *data = read_file("./data/example.jpg", &data_len);
+
+  size_t expect_len;
+  byte *expect = read_file("./data/example.b122", &expect_len);
+
+  base122_error_t error;
+  size_t encoded_len;
+  byte *encoded;
+  /* Allocate encoded. */
+  {
+
+    int got = base122_encode(data, data_len, NULL /* encoded */, 0 /* encoded_len */, &encoded_len,
+                             &error);
+    ASSERT(0 == got, "error in base122_encode: %s", error.msg);
+    encoded = malloc(encoded_len);
+  }
+
+  /* Encode. */
+  {
+    size_t written;
+    int got = base122_encode(data, data_len, encoded, encoded_len, &written, &error);
+    ASSERT(0 == got, "error in base122_encode: %s", error.msg);
+    ASSERT_BYTES_EQUAL(expect, expect_len, encoded, encoded_len, hexstring);
+  }
+
+  size_t decoded_len;
+  byte *decoded;
+  /* Allocate decoded. */
+  {
+    int got = base122_decode(encoded, encoded_len, NULL /* decoded */, 0 /* decoded_len */,
+                             &decoded_len, &error);
+    ASSERT(0 == got, "error in base122_decode: %s", error.msg);
+    decoded = malloc(decoded_len);
+  }
+
+  /* Decode. */
+  {
+    size_t written;
+    debug = 1;
+    debugmap = malloc(encoded_len * sizeof(src_to_nbits));
+
+    int got = base122_decode(encoded, encoded_len, decoded, decoded_len, &written, &error);
+    ASSERT(0 == got, "error in base122_decode: %s", error.msg);
+    debugmap_dump(data, data_len, decoded);
+    ASSERT_BYTES_EQUAL(data, data_len, decoded, decoded_len, hexstring);
+
+    free(debugmap);
+    debugmap = NULL;
+  }
+
+  free(decoded);
+  free(encoded);
+  free(expect);
+  free(data);
+}
+
 int main() {
   test_hexstring_to_bytes();
   test_bitstring_to_bytes();
@@ -293,6 +422,7 @@ int main() {
   test_bitwriter_write();
   test_decode();
   test_encode_all_1s();
+  test_encode_file();
 
   typedef struct {
     const char *description;

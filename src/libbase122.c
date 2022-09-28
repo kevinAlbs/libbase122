@@ -140,6 +140,15 @@ static int write_last_7(bitwriter_t *writer, unsigned char byteVal, base122_erro
   return 0;
 }
 
+typedef struct {
+  unsigned char src;
+  size_t nbits;
+} src_to_nbits;
+
+src_to_nbits *debugmap;
+size_t debugmap_i;
+int debug;
+
 int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, size_t out_len,
                    size_t *out_written, base122_error_t *error) {
   bitwriter_t writer = {0};
@@ -155,6 +164,8 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
   if (out == NULL) {
     writer.countOnly = 1;
   }
+
+  debugmap_i = 0;
 
   for (curByte = 0; curByte < in_len; curByte++) {
 
@@ -175,6 +186,11 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
       /* One byte sequence. */
       unsigned char curByteVal = in[curByte];
 
+      if (debugmap) {
+        debugmap[debugmap_i].src = curByteVal;
+        debugmap[debugmap_i].nbits = 7;
+        debugmap_i++;
+      }
       WRITE_7(curByteVal);
     } else {
       /* Two byte sequence. */
@@ -211,6 +227,15 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
         lastByteVal = (curByteVal << 0x6u) | (nextByteVal & 0x3F /* 00111111 */);
 
+        if (debugmap) {
+          debugmap[debugmap_i].src = curByteVal;
+          debugmap[debugmap_i].nbits = 1;
+          debugmap_i++;
+          debugmap[debugmap_i].src = nextByteVal;
+          debugmap[debugmap_i].nbits = 6;
+          debugmap_i++;
+        }
+
         WRITE_7(lastByteVal);
       } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
         unsigned char secondByteVal;
@@ -221,6 +246,15 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
         }
 
         secondByteVal = (curByteVal << 0x6u) | (nextByteVal & 0x3F /* 00111111 */);
+
+        if (debugmap) {
+          debugmap[debugmap_i].src = curByteVal;
+          debugmap[debugmap_i].nbits = 8;
+          debugmap_i++;
+          debugmap[debugmap_i].src = nextByteVal;
+          debugmap[debugmap_i].nbits = 6;
+          debugmap_i++;
+        }
 
         WRITE_7(secondByteVal);
       } else {
