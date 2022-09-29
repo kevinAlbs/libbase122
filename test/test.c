@@ -391,7 +391,8 @@ int main() {
        .encoded = "11000010 10111111 01100000"},
       {.description = "illegal last two bits",
        .data = "1111111 1111111 00",
-       .encoded = "01111111 01111111 11011110 10000000"}};
+       .encoded = "01111111 01111111 11011110 10000000"},
+      {.description = "fuzz crash 1", .data = "00010101", .encoded = "11000111 10000000"}};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
     roundtrip_test_t *test = tests + i;

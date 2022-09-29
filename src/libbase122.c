@@ -85,6 +85,10 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
 
       /* This will be a two byte character. Try to get the next 7 bits. */
       size_t next_nbits = bitreader_read(&reader, 7, &next_bits);
+      /* Align the first bit to start at position 6.
+       * E.g. if nbits = 3: 0abc0000 */
+      next_bits <<= 7 - next_nbits;
+
       if (next_nbits == 0) {
         b1 |= 0x7 << 2; /* 11100 */
         next_bits = bits;
