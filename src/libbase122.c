@@ -209,7 +209,11 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
           return -1;
         }
 
-        lastByteVal = (curByteVal << 0x6u) | (nextByteVal & 0x3F /* 00111111 */);
+        {
+          lastByteVal = curByteVal;
+          lastByteVal <<= 0x6u;
+          lastByteVal |= (nextByteVal & 0x3Fu /* 00111111 */);
+        }
 
         WRITE_7(lastByteVal);
       } else if (illegalIndex < sizeof(illegals) / sizeof(illegals[0])) {
@@ -220,7 +224,9 @@ int base122_decode(const unsigned char *in, size_t in_len, unsigned char *out, s
           return -1;
         }
 
-        secondByteVal = (curByteVal << 0x6u) | (nextByteVal & 0x3F /* 00111111 */);
+        secondByteVal = curByteVal;
+        secondByteVal <<= 0x6u;
+        secondByteVal |= (nextByteVal & 0x3Fu /* 00111111 */);
         WRITE_7(secondByteVal);
       } else {
         strncpy_safe(error->msg, "Got unrecognized illegal index", sizeof(error->msg));
