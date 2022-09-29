@@ -314,49 +314,6 @@ static byte *read_file(const char *path, size_t *len) {
   return data;
 }
 
-typedef struct {
-  unsigned char src;
-  size_t nbits;
-} src_to_nbits;
-
-extern src_to_nbits *debugmap;
-extern size_t debugmap_i;
-extern int debug;
-
-/* data is expected data. */
-static void debugmap_dump(byte *data, size_t data_len, byte *decoded) {
-#define MIN(A, B) (A < B) ? A : B
-  /* Dump the debug mapping src bytes to number of bits written. */
-  size_t debug_index = 0;
-
-  for (size_t i = 0; i < data_len; i++) {
-    char *expect_bitstring = bytes_to_bitstring(&data[i], 1);
-    char *got_bitstring = bytes_to_bitstring(&decoded[i], 1);
-    printf("Index %05zu | Expect %s %s Got %s | Came from", i, expect_bitstring,
-           data[i] == decoded[i] ? "==" : "!=", got_bitstring);
-    size_t nbits = 8;
-    while (nbits > 0) {
-      src_to_nbits *stn = debugmap + debug_index;
-      char *debug_bitstring = bytes_to_bitstring(&stn->src, 1);
-      size_t bits_from_src = MIN(nbits, stn->nbits);
-      printf(" [%zu:%zu]%s", debug_index, bits_from_src, debug_bitstring);
-      free(debug_bitstring);
-
-      if (nbits >= stn->nbits) {
-        nbits -= stn->nbits;
-        stn->nbits = 0;
-        debug_index++;
-      } else {
-        stn->nbits -= nbits;
-        nbits = 0;
-      }
-    }
-    printf("\n");
-    free(got_bitstring);
-    free(expect_bitstring);
-  }
-}
-
 static void test_encode_file(void) {
   size_t data_len;
   byte *data = read_file("./data/example.jpg", &data_len);
@@ -397,16 +354,10 @@ static void test_encode_file(void) {
   /* Decode. */
   {
     size_t written;
-    debug = 1;
-    debugmap = malloc(encoded_len * sizeof(src_to_nbits));
 
     int got = base122_decode(encoded, encoded_len, decoded, decoded_len, &written, &error);
     ASSERT(0 == got, "error in base122_decode: %s", error.msg);
-    debugmap_dump(data, data_len, decoded);
     ASSERT_BYTES_EQUAL(data, data_len, decoded, decoded_len, hexstring);
-
-    free(debugmap);
-    debugmap = NULL;
   }
 
   free(decoded);
