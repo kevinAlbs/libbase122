@@ -73,7 +73,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
     if (nbits < 7) {
       /* Align the first bit to start at position 6.
        * E.g. if nbits = 3: 0abc0000 */
-      bits = (unsigned char)(bits << 7 - nbits);
+      bits = (unsigned char)(bits << (7 - nbits));
     }
 
     if (is_illegal(bits)) {
@@ -87,7 +87,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
       size_t next_nbits = bitreader_read(&reader, 7, &next_bits);
       /* Align the first bit to start at position 6.
        * E.g. if nbits = 3: 0abc0000 */
-      next_bits = (unsigned char)(next_bits << 7 - next_nbits);
+      next_bits = (unsigned char)(next_bits << (7 - next_nbits));
 
       if (next_nbits == 0) {
         b1 |= 0x7 << 2; /* 11100 */
@@ -99,7 +99,7 @@ int base122_encode(const unsigned char *in, size_t in_len, unsigned char *out, s
       /* Push the first bit onto the first byte */
       first_bit = (next_bits >> 6) & 1;
       b1 |= first_bit;
-      b2 |= (unsigned char)(next_bits & 0x3F /* 00111111 */);
+      b2 = (unsigned char)(b2 | (next_bits & 0x3F /* 00111111 */));
 
       OUTPUT_BYTE(b1)
       OUTPUT_BYTE(b2)
@@ -136,7 +136,7 @@ static int write_last_7(bitwriter_t *writer, unsigned char byteVal, base122_erro
     return -1;
   }
   /* Shift bits to write. */
-  byteVal = (unsigned char)(byteVal >> 7 - nbits);
+  byteVal = (unsigned char)(byteVal >> (7 - nbits));
   if (bitwriter_write(writer, nbits, byteVal) == -1) {
     strncpy_safe(error->msg, "Output does not have sufficient size", sizeof(error->msg));
     return -1;
