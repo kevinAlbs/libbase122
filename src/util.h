@@ -64,9 +64,9 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
   twoBytes = (unsigned short)(twoBytes << 8);
   if (firstByteIndex + 1 < reader->len) {
     size_t secondByteIndex = firstByteIndex + 1;
-    twoBytes |= reader->in[secondByteIndex];
+    twoBytes = (unsigned short)(twoBytes | reader->in[secondByteIndex]);
   }
-  twoBytes = (unsigned short)(twoBytes >> (8 - firstByteCurBit) + (8 - nbits));
+  twoBytes = (unsigned short)(twoBytes >> ((8 - firstByteCurBit) + (8 - nbits)));
   mask = (unsigned char)(~(255u << nbits));
   *out = (unsigned char)(twoBytes & mask);
 
