@@ -19,7 +19,7 @@ jobs:
           - os: ubuntu-latest
             EXTRA_C_FLAGS: -std=c89 --pedantic -Wall -Werror -Wconversion -fsanitize=address -fsanitize=leak
           - os: macos-latest
-            EXTRA_C_FLAGS: -std=c89 --pedantic -Wall -Werror -Wconversion -fsanitize=address -fsanitize=leak
+            EXTRA_C_FLAGS: -std=c89 --pedantic -Wall -Werror -Wconversion -fsanitize=address
           - os: windows-latest
             EXTRA_C_FLAGS: /Wall /WX
     runs-on: ${{ matrix.os }}
