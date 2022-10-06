@@ -61,12 +61,12 @@ static size_t bitreader_read(bitreader_t *reader, size_t nbits, unsigned char *o
   firstByteIndex = reader->curBit / 8;
   firstByteCurBit = reader->curBit % 8;
   twoBytes = reader->in[firstByteIndex];
-  twoBytes <<= 8;
+  twoBytes = (unsigned short)(twoBytes << 8);
   if (firstByteIndex + 1 < reader->len) {
     size_t secondByteIndex = firstByteIndex + 1;
     twoBytes |= reader->in[secondByteIndex];
   }
-  twoBytes >>= (8 - firstByteCurBit) + (8 - nbits);
+  twoBytes = (unsigned short)(twoBytes >> (8 - firstByteCurBit) + (8 - nbits));
   mask = (unsigned char)(~(255u << nbits));
   *out = (unsigned char)(twoBytes & mask);
 
@@ -128,10 +128,10 @@ static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) 
 
   mask = (unsigned char)(~(255u >> firstByteCurBit));
   twoBytes = writer->out[firstByteIndex] & mask;
-  twoBytes <<= 8;
+  twoBytes = (unsigned short)(twoBytes << 8);
 
   mask = (unsigned char)(~(255u << nbits));
-  twoBytes |= ((unsigned short)(in & mask)) << (8 + (8 - firstByteCurBit) - nbits);
+  twoBytes |= (unsigned short)((in & mask) << (8 + (8 - firstByteCurBit) - nbits));
 
   writer->out[firstByteIndex] = (unsigned char)(twoBytes >> 8);
   if (firstByteCurBit + nbits > 8) {
