@@ -31,8 +31,8 @@ byte *hexstring_to_bytes(const char *hexstring, size_t *bytes_len) {
       TEST_ERROR("expected hex character, got: %c in %s", *ptr, hexstring);
     }
 
-    curr *= 16;
-    curr += val;
+    curr = (byte)(curr * 16);
+    curr = (byte)(curr + val);
     numgot += 1;
     if (numgot == 2) {
       *outptr = curr;
@@ -72,8 +72,8 @@ byte *bitstring_to_bytes(const char *bitstring, size_t *bytes_len) {
       TEST_ERROR("expected 0 or 1 character, got: %c in %s", *ptr, bitstring);
     }
 
-    curr *= 2;
-    curr += val;
+    curr = (byte)(curr * 2);
+    curr = (byte)(curr + val);
     numgot += 1;
     if (numgot == 8) {
       *outptr = curr;
@@ -91,7 +91,7 @@ char *bytes_to_bitstring(const byte *bytes, size_t bytes_len) {
   char *ptr = bitstring;
   for (size_t i = 0; i < bytes_len; i++) {
     for (byte j = 0; j < 8; j++) {
-      byte val = (1 << (7 - j)) & bytes[i];
+      byte val = (byte)((1 << (7 - j)) & bytes[i]);
       if (val) {
         *ptr = '1';
       } else {
