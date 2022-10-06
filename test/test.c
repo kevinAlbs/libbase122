@@ -316,10 +316,10 @@ static byte *read_file(const char *path, size_t *len) {
 
 static void test_encode_file(void) {
   size_t data_len;
-  byte *data = read_file("./data/example.jpg", &data_len);
+  byte *data = read_file("../data/example.jpg", &data_len);
 
   size_t expect_len;
-  byte *expect = read_file("./data/example.b122", &expect_len);
+  byte *expect = read_file("../data/example.b122", &expect_len);
 
   base122_error_t error;
   size_t encoded_len;
