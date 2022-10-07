@@ -7,8 +7,12 @@
 
 /* strncpy_safe is like strncpy, except dest is always NULL terminated. */
 static void strncpy_safe(char *dest, const char *src, size_t n) {
+#ifdef _WIN32
+  strncpy_s(dest, n, src, _TRUNCATE);
+#else
   strncpy(dest, src, n);
   dest[n - 1] = '\0';
+#endif
 }
 
 static unsigned char illegals[] = {
