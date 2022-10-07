@@ -81,6 +81,7 @@ typedef struct {
   size_t len /* May be 0 if countOnly is true */;
   size_t curBit;
   int countOnly; /* If 1, only count written bits. Do not write. */
+  int padding;
 } bitwriter_t;
 
 /* bitwriter_write writes nbits bits to writer.
