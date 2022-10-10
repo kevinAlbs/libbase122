@@ -15,6 +15,7 @@ if (ENABLE_FUZZER)
     target_link_libraries(fuzz-libbase122 libbase122)
     set_property(TARGET fuzz-libbase122 PROPERTY C_STANDARD 99)
 endif()
+target_include_directories(test-libbase122 PRIVATE ${CMAKE_SOURCE_DIR})
 
 enable_testing()
 add_test (NAME test-libbase122 COMMAND test-libbase122)

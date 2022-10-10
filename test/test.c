@@ -1,4 +1,4 @@
-#include "../src/libbase122.h"
+#include "src/libbase122.h"
 
 #include "assertions.h"
 #include <errno.h>
@@ -7,7 +7,13 @@
 #include <string.h> // strerror
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef _WIN32
+#define SSIZE_T ssize_t
 #include <unistd.h>
+#else
+#include <basetsd.h> // SSIZE_T
+#include <io.h>      // _open
+#endif
 
 static void test_hexstring_to_bytes(void) {
   /* One byte. */
@@ -47,7 +53,7 @@ static void test_bitstring_to_bytes(void) {
   }
 }
 
-#include "../src/util.h"
+#include "src/util.h"
 
 static void test_bitreader_read(void) {
   /* One byte. */
@@ -292,15 +298,60 @@ static void test_encode_all_1s(void) {
   }
 }
 
+// pstrerror is a portable strerror
+static const char *pstrerror(int err) {
+#ifdef _WIN32
+  static char buf[64];
+  errno_t ret = strerror_s(buf, sizeof(buf), err);
+  ASSERT(ret == 0, "strerror_s got error: %d", (int)ret);
+  return buf;
+#else
+  return strerror(err);
+#endif
+}
+
+// pread is a portable file read.
+static SSIZE_T pread(int fd, void *buffer, size_t buffer_size) {
+#ifdef _WIN32
+  return _read(fd, buffer, (unsigned int)buffer_size);
+#else
+  return read(fd, buffer, buffer_size);
+#endif
+}
+
+// popen is a portable file open. Returns 0 on success. Returns error number on error.
+static int popen(const char *pathname, int flags, int *fd) {
+#ifdef _WIN32
+  int ret = _sopen_s(fd, pathname, flags, _SH_DENYNO, 0 /* pmode */);
+  return ret;
+#else
+  int ret = open(path, oflag | _O_BINARY);
+  if (ret == -1) {
+    return errno;
+  }
+  *fd = ret;
+  return 0;
+#endif
+}
+
+static int pclose(int fd) {
+#ifdef _WIN32
+  return _close(fd);
+#else
+  return close(fd);
+#endif
+}
+
 static byte *read_file(const char *path, size_t *len) {
   size_t capacity = 1024;
   byte *data = malloc(capacity);
   size_t offset = 0;
-  int fd = open(path, O_RDONLY);
-  ASSERT(fd != -1, "error in open: %s", strerror(errno));
-  ssize_t got;
+  int fd;
+  int err = popen(path, O_RDONLY, &fd);
+  ASSERT(0 == err, "error in open: %s", pstrerror(err));
+  SSIZE_T got;
 
-  while ((got = read(fd, data + offset, capacity - offset)) > 0) {
+  while ((got = pread(fd, data + offset, capacity - offset)) > 0) {
     offset += (size_t)got;
     if (capacity == offset) {
       capacity *= 2;
@@ -308,8 +359,8 @@ static byte *read_file(const char *path, size_t *len) {
     }
   }
 
-  ASSERT(got != -1, "error in read: %s", strerror(errno));
-  close(fd);
+  ASSERT(got != -1, "error in read: %s", pstrerror(errno));
+  pclose(fd);
   *len = offset;
   return data;
 }
@@ -366,7 +417,7 @@ static void test_encode_file(void) {
   free(data);
 }
 
-int main() {
+int main(void) {
   test_hexstring_to_bytes();
   test_bitstring_to_bytes();
   test_bitreader_read();
