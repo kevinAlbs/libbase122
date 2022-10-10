@@ -1,4 +1,4 @@
-#include "../src/libbase122.h"
+#include "../src/base122.h"
 #include "assertions.h"
 
 #include <stdint.h>

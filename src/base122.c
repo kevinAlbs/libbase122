@@ -1,4 +1,4 @@
-#include "libbase122.h"
+#include "base122.h"
 #include "util.h"
 
 #include <assert.h>
