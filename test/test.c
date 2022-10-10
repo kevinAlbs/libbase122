@@ -310,8 +310,8 @@ static const char *pstrerror(int err) {
 #endif
 }
 
-// pread is a portable file read.
-static SSIZE_T pread(int fd, void *buffer, size_t buffer_size) {
+// portable_read is a portable file read.
+static SSIZE_T portable_read(int fd, void *buffer, size_t buffer_size) {
 #ifdef _WIN32
   return _read(fd, buffer, (unsigned int)buffer_size);
 #else
@@ -319,13 +319,13 @@ static SSIZE_T pread(int fd, void *buffer, size_t buffer_size) {
 #endif
 }
 
-// popen is a portable file open. Returns 0 on success. Returns error number on error.
-static int popen(const char *pathname, int flags, int *fd) {
+// portable_open is a portable file open. Returns 0 on success. Returns error number on error.
+static int portable_open(const char *pathname, int flags, int *fd) {
 #ifdef _WIN32
   int ret = _sopen_s(fd, pathname, flags | O_BINARY, _SH_DENYNO, 0 /* pmode */);
   return ret;
 #else
-  int ret = open(path, oflag);
+  int ret = open(pathname, flags);
   if (ret == -1) {
     return errno;
   }
@@ -334,7 +334,7 @@ static int popen(const char *pathname, int flags, int *fd) {
 #endif
 }
 
-static int pclose(int fd) {
+static int portable_close(int fd) {
 #ifdef _WIN32
   return _close(fd);
 #else
@@ -347,11 +347,11 @@ static byte *read_file(const char *path, size_t *len) {
   byte *data = malloc(capacity);
   size_t offset = 0;
   int fd;
-  int err = popen(path, O_RDONLY, &fd);
+  int err = portable_open(path, O_RDONLY, &fd);
   ASSERT(0 == err, "error in open: %s", pstrerror(err));
   SSIZE_T got;
 
-  while ((got = pread(fd, data + offset, capacity - offset)) > 0) {
+  while ((got = portable_read(fd, data + offset, capacity - offset)) > 0) {
     offset += (size_t)got;
     if (capacity == offset) {
       capacity *= 2;
@@ -360,7 +360,7 @@ static byte *read_file(const char *path, size_t *len) {
   }
 
   ASSERT(got != -1, "error in read: %s", pstrerror(errno));
-  pclose(fd);
+  portable_close(fd);
   *len = offset;
   return data;
 }
