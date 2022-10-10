@@ -322,10 +322,10 @@ static SSIZE_T pread(int fd, void *buffer, size_t buffer_size) {
 // popen is a portable file open. Returns 0 on success. Returns error number on error.
 static int popen(const char *pathname, int flags, int *fd) {
 #ifdef _WIN32
-  int ret = _sopen_s(fd, pathname, flags, _SH_DENYNO, 0 /* pmode */);
+  int ret = _sopen_s(fd, pathname, flags | O_BINARY, _SH_DENYNO, 0 /* pmode */);
   return ret;
 #else
-  int ret = open(path, oflag | _O_BINARY);
+  int ret = open(path, oflag);
   if (ret == -1) {
     return errno;
   }
