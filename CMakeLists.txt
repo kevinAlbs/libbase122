@@ -21,5 +21,6 @@ enable_testing()
 add_test (NAME test-libbase122 COMMAND test-libbase122)
 
 add_executable (b122 src/b122.c)
+target_link_libraries(b122 base122)
 install (TARGETS base122 b122)
 install (FILES src/base122.h TYPE INCLUDE)
