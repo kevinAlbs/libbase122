@@ -8,8 +8,7 @@
 static const char *pstrerror(int err) {
 #ifdef _WIN32
   static char buf[64];
-  errno_t ret = strerror_s(buf, sizeof(buf), err);
-  ASSERT(ret == 0, "strerror_s got error: %d", (int)ret);
+  strerror_s(buf, sizeof(buf), err);
   return buf;
 #else
   return strerror(err);
@@ -52,7 +51,8 @@ int main(int argc, char **argv) {
       break;
     }
 
-    if ((err = ferror(stdin))) {
+    err = ferror(stdin);
+    if (err != 0) {
       fprintf(stderr, "error reading from stdin: %d %s\n", err, pstrerror(err));
       return 1;
     }
