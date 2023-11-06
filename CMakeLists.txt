@@ -4,6 +4,10 @@ project(libbase122 VERSION 0.1.0 LANGUAGES C)
 add_library(base122 src/base122.c)
 add_library(base122_shared SHARED src/base122.c)
 
+target_compile_definitions(base122 PUBLIC BASE122_STATIC)
+target_compile_definitions(base122 PRIVATE BASE122_COMPILING)
+target_compile_definitions(base122_shared PRIVATE BASE122_COMPILING)
+
 add_executable (test-libbase122 test/test.c test/assertions.c)
 target_link_libraries(test-libbase122 base122)
 # Use C99 in test-libbase122.
