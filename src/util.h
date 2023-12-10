@@ -1,6 +1,10 @@
 #ifndef LIBBASE_122_UTIL_H
 #define LIBBASE_122_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <assert.h>
 #include <stddef.h> /* for size_t */
 
@@ -141,5 +145,10 @@ static int bitwriter_write(bitwriter_t *writer, size_t nbits, unsigned char in) 
   writer->curBit += nbits;
   return 0;
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LIBBASE_122_UTIL_H */
