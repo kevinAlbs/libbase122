@@ -1,6 +1,10 @@
 #ifndef LIBBASE122_H
 #define LIBBASE122_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h> /* for size_t */
 
 typedef struct {
@@ -33,5 +37,10 @@ int BASE122_EXPORT base122_encode(const unsigned char *in, size_t in_len, unsign
  * Returns -1 on error. */
 int BASE122_EXPORT base122_decode(const unsigned char *in, size_t in_len, unsigned char *out,
                                   size_t out_len, size_t *out_written, base122_error_t *error);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LIBBASE122_H */
