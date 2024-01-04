@@ -37,6 +37,15 @@ cat example.jpg | b122 > encoded.b122
 cat encoded.b122 | b122 -d > decoded.jpg
 ```
 
+## Using with CMake
+
+CMake targets are exported. To use libbase122 in a CMake project:
+
+```cmake
+add_executable (app app.c)
+find_package (Base122 REQUIRED)
+target_link_libraries (app base122::static) # Or base122::shared
+```
 
 ## Contributing
 
