@@ -26,6 +26,7 @@ jobs:
       run: |
         cmake \
           -DLIBBASE122_USE_CONFIG_FILE=ON \
+          -DLIBBASE122_USE_SHARED=ON \
           -DCMAKE_PREFIX_PATH=${{github.workspace}}/.install \
           -S. -Bcmake-build
 
