@@ -33,3 +33,26 @@ install (TARGETS base122 b122 base122_shared)
 install (FILES src/base122.h TYPE INCLUDE)
 add_executable (example src/example.c)
 target_link_libraries(example base122)
+# Export CMake targets.
+set_target_properties(base122 PROPERTIES EXPORT_NAME base122::static)
+set_target_properties(base122_shared PROPERTIES EXPORT_NAME base122::shared)
+target_include_directories(base122 INTERFACE $<INSTALL_INTERFACE:include>)
+target_include_directories(base122_shared INTERFACE $<INSTALL_INTERFACE:include>)
+install (TARGETS base122 base122_shared EXPORT Base122Targets)
+install (EXPORT Base122Targets FILE Base122Targets.cmake DESTINATION lib/cmake/Base122)
+include (CMakePackageConfigHelpers)
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Base122Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/Base122Config.cmake"
+    INSTALL_DESTINATION "lib/cmake/Base122"
+    NO_SET_AND_CHECK_MACRO
+)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/Base122Version.cmake"
+    COMPATIBILITY AnyNewerVersion
+)
+install (FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/Base122Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/Base122Version.cmake"
+    DESTINATION "lib/cmake/Base122"
+)
